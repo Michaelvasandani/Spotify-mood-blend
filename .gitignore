@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+venv/
+env/
+.venv/
+spotify-proj/
+.DS_Store
