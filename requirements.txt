@@ -4,3 +4,7 @@ spotipy==2.23.0
 python-dotenv==1.0.0
 pydantic==2.5.0
 httpx==0.25.2
+lyricsgenius==3.0.1
+rapidfuzz==3.6.1
+beautifulsoup4==4.12.2
+sqlalchemy==2.0.23

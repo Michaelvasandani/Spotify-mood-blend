@@ -7,8 +7,11 @@ A FastAPI application that integrates with Spotify Web API to fetch and analyze 
 - OAuth2 authentication with Spotify
 - Fetch user's top tracks (short, medium, long term)
 - Get recently played tracks
-- Retrieve audio features for tracks (danceability, energy, valence, etc.)
-- Batch audio features retrieval
+- **Genius Lyrics Integration**:
+  - Smart fuzzy matching between Spotify tracks and Genius
+  - Automatic lyrics fetching and caching
+  - Batch lyrics processing
+  - SQLite database for local lyrics cache
 
 ## Setup
 
@@ -19,7 +22,14 @@ A FastAPI application that integrates with Spotify Web API to fetch and analyze 
 3. Add `http://127.0.0.1:8000/auth/callback` to Redirect URIs
 4. Copy your Client ID and Client Secret
 
-### 2. Set Up Virtual Environment
+### 2. Create Genius App
+
+1. Go to [Genius API Dashboard](https://genius.com/api-clients)
+2. Create a new API client
+3. Fill in App Name (e.g., "Spotify Lyrics App") and App Website URL
+4. Copy your Access Token
+
+### 3. Set Up Virtual Environment
 
 Create and activate a virtual environment:
 
@@ -35,14 +45,14 @@ python -m venv spotify-proj
 spotify-proj\Scripts\activate
 ```
 
-### 3. Install Dependencies
+### 4. Install Dependencies
 
 With the virtual environment activated:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment
+### 5. Configure Environment
 
 Create a `.env` file based on `.env.example`:
 
@@ -56,9 +66,10 @@ SPOTIFY_CLIENT_ID=your_client_id_here
 SPOTIFY_CLIENT_SECRET=your_client_secret_here
 SPOTIFY_REDIRECT_URI=http://127.0.0.1:8000/auth/callback
 SECRET_KEY=your_secret_key_here
+GENIUS_ACCESS_TOKEN=your_genius_token_here
 ```
 
-### 5. Run the Application
+### 6. Run the Application
 
 ```bash
 python main.py
@@ -122,6 +133,40 @@ GET /api/audio-features-batch?track_ids=id1,id2,id3
 Parameters:
 - `track_ids`: Comma-separated list of track IDs (max 100)
 
+### Lyrics Endpoints
+
+**Get Lyrics for a Track**
+```
+GET /api/lyrics/{track_id}
+```
+Returns lyrics with caching and fuzzy matching.
+
+**Batch Lyrics Processing**
+```
+POST /api/lyrics/batch
+Body: {"tracks": [{"id": "track_id", "name": "title", "artists": ["artist"]}]}
+```
+
+**Search Genius (No Cache)**
+```
+GET /api/lyrics/search/{artist}/{title}
+```
+
+**Cache Statistics**
+```
+GET /api/lyrics/cache/stats
+```
+
+**List Cached Entries**
+```
+GET /api/lyrics/cache/list?limit=50&offset=0
+```
+
+**Clear Cache Entry**
+```
+DELETE /api/lyrics/cache/{track_id}
+```
+
 ## Example Usage
 
 1. **Start the authentication flow:**
@@ -139,23 +184,33 @@ Parameters:
    curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
         http://127.0.0.1:8000/api/recently-played
    
-   # Get audio features
+   # Get lyrics for a track
    curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-        http://127.0.0.1:8000/api/audio-features/TRACK_ID
+        http://127.0.0.1:8000/api/lyrics/TRACK_ID
+   
+   # Get cache statistics
+   curl http://127.0.0.1:8000/api/lyrics/cache/stats
    ```
 
-## Audio Features Explained
+## Genius Lyrics Integration
 
-- **danceability**: How suitable a track is for dancing (0.0-1.0)
-- **energy**: Perceptual measure of intensity and activity (0.0-1.0)
-- **valence**: Musical positiveness/happiness (0.0-1.0)
-- **acousticness**: Confidence of track being acoustic (0.0-1.0)
-- **instrumentalness**: Predicts if track contains no vocals (0.0-1.0)
-- **speechiness**: Presence of spoken words (0.0-1.0)
-- **tempo**: Estimated tempo in BPM
-- **loudness**: Overall loudness in decibels
-- **key**: Pitch class notation (0-11)
-- **mode**: Major (1) or minor (0)
+### How it Works
+1. **Smart Matching**: Uses fuzzy string matching to find the best Genius match for Spotify tracks
+2. **Caching System**: Stores lyrics locally in SQLite to avoid repeated API calls
+3. **Batch Processing**: Can fetch lyrics for multiple tracks efficiently
+4. **Rate Limiting**: Respects Genius API limits (100 requests/hour)
+
+### Fuzzy Matching Features
+- Handles featuring artists: "Song (feat. Artist)" → "Song"
+- Removes remix indicators: "Song (Remix)" → "Song"
+- Cleans punctuation and extra spaces
+- Multiple matching algorithms for best results
+
+### Cache Benefits
+- **Instant Response**: Cached lyrics return immediately
+- **Cost Effective**: Reduces API calls to Genius
+- **Offline Capability**: Works even when Genius is unavailable
+- **Analytics**: Track cache hit rates and popular songs
 
 ## API Documentation
 

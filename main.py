@@ -8,10 +8,11 @@ load_dotenv()
 
 app = FastAPI(title="Spotify Mood Blend API")
 
-from src.routes import auth, data
+from src.routes import auth, data, lyrics
 
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(data.router, prefix="/api", tags=["data"])
+app.include_router(lyrics.router, prefix="/api", tags=["lyrics"])
 
 @app.get("/")
 async def root():
@@ -19,6 +20,11 @@ async def root():
         "message": "Spotify Mood Blend API",
         "endpoints": {
             "auth": "/auth/login",
+            "top_tracks": "/api/top-tracks",
+            "recently_played": "/api/recently-played",
+            "lyrics": "/api/lyrics/{track_id}",
+            "batch_lyrics": "/api/lyrics/batch",
+            "cache_stats": "/api/lyrics/cache/stats",
             "docs": "/docs"
         }
     }
